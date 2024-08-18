@@ -8,6 +8,7 @@ from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.engine import Engine
 from sqlalchemy.sql import text
+from sqlalchemy.exc import IntegrityError
 from app.commons.models import TextChunk
 
 
@@ -48,35 +49,39 @@ class POST_ORM:
         #     print("text_chunks tablosu başarıyla oluşturuldu.")
 
     def add_chunk(self, chunk_text, chunk_embedding):
-        # chunk_embedding_str = '{' + ','.join(map(str, chunk_embedding)) + '}'
-        new_chunk = TextChunk(chunk=chunk_text, embedding=chunk_embedding)
-        # with self.engine.connect() as connection:
-        #     sql = """
-        #         INSERT INTO text_chunks (chunk, embedding)
-        #         VALUES (%s, %d);
-        #     """
-        #     embedding_str = '{' + ','.join(map(str, chunk_embedding)) + '}'
-        #     connection.execute(sql, (chunk_text, embedding_str))
-        #     connection.close()
+        try:
+            # Yeni bir TextChunk nesnesi oluştur
+            new_chunk = TextChunk(chunk=chunk_text, embedding=chunk_embedding)
 
-        self.session.add(new_chunk)
-        self.session.commit()
+            # Nesneyi ekle
+            self.session.add(new_chunk)
+            self.session.commit()
+        except IntegrityError:
+            # Çakışma durumunda rollback yap
+            self.session.rollback()
+            print(f"Chunk with text '{chunk_text}' already exists.")
 
     def get_chunks(self):
         return self.session.query(TextChunk).all()
 
     def search_nearest_chunks(self, query_embedding, top_k=5):
+        embedding_str = ",".join(map(str, query_embedding))
+
+        # KNN SQL sorgusu
+        knn_query = text(
+            f"""
+            SELECT id, chunk, embedding
+            FROM text_chunks
+            ORDER BY embedding <=> ARRAY[{embedding_str}]::vector
+            LIMIT :k;
+        """
+        )
+
+        # Sorguyu çalıştırma
         with self.engine.connect() as connection:
-            result = connection.execute(
-                text("""
-                SELECT id, chunk
-                FROM text_chunks
-                ORDER BY embedding <=> :query_embedding
-                LIMIT :top_k
-                """),
-                {"query_embedding": query_embedding, "top_k": top_k}
-            )
-            return result.fetchall()
+            result = connection.execute(knn_query, {"k": top_k})
+            rows = result.fetchall()
+        return rows
 
     def close(self):
         self.session.close()
@@ -108,17 +113,10 @@ class POST_ORM:
             return DATABASE_URL
 
         def _default_env():
-            # db_name = "mydatabase"
-            # user = "postgresql"
-            # host = "localhost"
-            # password = "password123"
-            POSTGRES_USER =  'postgres_user'
-            POSTGRES_PASSWORD =  'password123'
-            POSTGRES_DB = 'mydatabase'
-            DATABASE_URL = (
-                f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@localhost:5432/{POSTGRES_DB}"
-            )
-            # return Config(db=db_name, user=user, password=password, host=host)
+            POSTGRES_USER = "postgres_user"
+            POSTGRES_PASSWORD = "password123"
+            POSTGRES_DB = "mydatabase"
+            DATABASE_URL = f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@localhost:5432/{POSTGRES_DB}"
             return DATABASE_URL
 
         if not hasattr(self, "_connection_url"):
@@ -132,3 +130,17 @@ class POST_ORM:
     def _add_extension(self):
         with self.engine.connect() as connection:
             connection.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+
+    def _is_exists(self, params: dict):
+        model = params.get("model", None)
+        assert model, "model have to be defined"
+
+        where_clause = params.get("where", None)
+        assert where_clause, "where have to be defined"
+
+        x = self.session.query(model).where(model.where_clause).first()
+
+        if x:
+            return True
+        else:
+            return False
