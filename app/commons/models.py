@@ -8,8 +8,6 @@ from sqlalchemy.orm import mapped_column
 from pgvector.sqlalchemy import Vector
 
 
-
-
 @dataclasses.dataclass
 class Config:
     host: Optional[str] = None

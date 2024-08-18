@@ -28,7 +28,6 @@ class PDFReadError(BaseException):
     pass
 
 
-
 def _get_pdf(url: str) -> str:
     response = requests.get(url)
     if response.status_code != 200:
@@ -70,14 +69,16 @@ def _embed_text(text):
         outputs = model(**inputs)
     return torch.mean(outputs.last_hidden_state, dim=1).detach().numpy().tolist()
 
+
 def _upload_to_db(chk, embedding):
-  # Her parçanın embedding'ini hesapla ve veritabanına ekle
+    # Her parçanın embedding'ini hesapla ve veritabanına ekle
     # chunk_text = ' '.join(chunk_words)
     # chunk_embedding = get_embedding(chunk_text)[0]
     try:
         post_orm.add_chunk(chk, embedding)
     except Exception as e:
         print(e)
+
 
 def embedding_service(url: str):
     # get pdf
@@ -93,6 +94,3 @@ def embedding_service(url: str):
     for chk in chunks:
         embedding = _embed_text(chk)[0]
         _upload_to_db(chk, embedding=embedding)
-
-    
-

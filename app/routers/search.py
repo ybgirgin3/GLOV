@@ -6,6 +6,7 @@ from app.services.embedding_service import embedding_service, _embed_text
 router = APIRouter(prefix="/search")
 orm = POST_ORM()
 
+
 @router.get("/query")
 async def search(url: str, query: str, top_k: Optional[int] = 5):
     try:
@@ -14,15 +15,13 @@ async def search(url: str, query: str, top_k: Optional[int] = 5):
 
         # embed the question
         embedded_query = _embed_text(query)[0]
-        
+
         results = orm.search_nearest_chunks(embedded_query, top_k=5)
 
         orm.close()
 
         return {
-            "results": [
-                {"chunk": result.chunk, "id": result.id} for result in results
-            ]
+            "results": [{"chunk": result.chunk, "id": result.id} for result in results]
         }
 
     except Exception as e:
