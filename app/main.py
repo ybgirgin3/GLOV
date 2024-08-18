@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from .routers import search
+from app.routers import search
 import nltk
 
 nltk.download("punkt")

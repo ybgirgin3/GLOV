@@ -1,12 +1,8 @@
-import psycopg2
 from dotenv import load_dotenv
 import os
-from typing import Optional
-from app.commons.models import Config
-from sqlalchemy import create_engine, Column, Integer, String, Text
+from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.engine import Engine
 from sqlalchemy.sql import text
 from sqlalchemy.exc import IntegrityError
 from app.commons.models import TextChunk

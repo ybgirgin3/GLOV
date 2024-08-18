@@ -23,7 +23,7 @@ services:
     environment:
       DATABASE_URL: postgres://postgres_user:password123@postgres:5432/mydatabase
     ports:
-      - "8000:8000"
+      - "8080:8080"
 
 volumes:
   pgdata:
