@@ -9,6 +9,7 @@ from pgvector.sqlalchemy import Vector
 
 
 
+
 @dataclasses.dataclass
 class Config:
     host: Optional[str] = None
@@ -26,4 +27,4 @@ class TextChunk(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     chunk = Column(Text, nullable=False)
-    embedding = mapped_column(Vector("VECTOR(300)"))
+    embedding = Column(Vector(1024))
