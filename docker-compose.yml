@@ -1,17 +1,30 @@
 version: '3.8'
 
 services:
-  db:
-    image: postgres:15
+  postgres:
+    image: pgvector/pgvector:pg16
     container_name: postgres_db
     environment:
-      POSTGRES_USER: postgresql
+      POSTGRES_USER: postgres_user
       POSTGRES_PASSWORD: password123
       POSTGRES_DB: mydatabase
     ports:
-      - '5432:5432'
+      - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres_db/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  fastapi:
+    build:
+      context: .  # FastAPI uygulaması için Dockerfile'ın bulunduğu dizin
+    container_name: my_fastapi_app
+    depends_on:
+      - postgres  # PostgreSQL başlatılmadan FastAPI başlamaz
+    environment:
+      DATABASE_URL: postgres://postgres_user:password123@postgres:5432/mydatabase
+    ports:
+      - "8000:8000"
 
 volumes:
-  postgres_data:
+  pgdata:
+
