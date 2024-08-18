@@ -74,7 +74,10 @@ def _upload_to_db(chk, embedding):
   # Her parçanın embedding'ini hesapla ve veritabanına ekle
     # chunk_text = ' '.join(chunk_words)
     # chunk_embedding = get_embedding(chunk_text)[0]
-    post_orm.add_chunk(chk, embedding)
+    try:
+        post_orm.add_chunk(chk, embedding)
+    except Exception as e:
+        print(e)
 
 def embedding_service(url: str):
     # get pdf
