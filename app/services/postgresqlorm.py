@@ -25,14 +25,40 @@ class POST_ORM:
         )
         self.session = self.SessionLocal()
         self.is_connection_successfull()
-        self.create_tables()
+        # self.create_tables()
 
     def create_tables(self):
-        # self._add_extension()
+        self._add_extension()
         Base.metadata.create_all(bind=self.engine)
+        # with self.engine.connect() as connection:
+        # # pgvector uzantısını ekleme
+        #     connection.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+        #     print("pgvector eklentisi başarıyla eklendi.")
+
+        #     # text_chunks tablosunu oluşturma
+        #     create_table_query = """
+        #     CREATE TABLE IF NOT EXISTS text_chunks (
+        #         id SERIAL PRIMARY KEY,
+        #         chunk TEXT,
+        #         embedding vector(1024)  -- Bu kısım embedding boyutuna göre değişebilir.
+        #     );
+        #     """
+        #     connection.execute(text(create_table_query))
+        #     connection.close()
+        #     print("text_chunks tablosu başarıyla oluşturuldu.")
 
     def add_chunk(self, chunk_text, chunk_embedding):
+        # chunk_embedding_str = '{' + ','.join(map(str, chunk_embedding)) + '}'
         new_chunk = TextChunk(chunk=chunk_text, embedding=chunk_embedding)
+        # with self.engine.connect() as connection:
+        #     sql = """
+        #         INSERT INTO text_chunks (chunk, embedding)
+        #         VALUES (%s, %d);
+        #     """
+        #     embedding_str = '{' + ','.join(map(str, chunk_embedding)) + '}'
+        #     connection.execute(sql, (chunk_text, embedding_str))
+        #     connection.close()
+
         self.session.add(new_chunk)
         self.session.commit()
 
@@ -82,12 +108,15 @@ class POST_ORM:
             return DATABASE_URL
 
         def _default_env():
-            db_name = "mydatabase"
-            user = "postgresql"
-            host = "localhost"
-            password = "password123"
+            # db_name = "mydatabase"
+            # user = "postgresql"
+            # host = "localhost"
+            # password = "password123"
+            POSTGRES_USER =  'postgres_user'
+            POSTGRES_PASSWORD =  'password123'
+            POSTGRES_DB = 'mydatabase'
             DATABASE_URL = (
-                f"postgresql+psycopg2://{user}:{password}@localhost:5432/{db_name}"
+                f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@localhost:5432/{POSTGRES_DB}"
             )
             # return Config(db=db_name, user=user, password=password, host=host)
             return DATABASE_URL
