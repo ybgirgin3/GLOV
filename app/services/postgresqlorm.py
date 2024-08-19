@@ -60,7 +60,7 @@ class POST_ORM:
     def get_chunks(self):
         return self.session.query(TextChunk).all()
 
-    def search_nearest_chunks(self, query_embedding, top_k=5):
+    def search_nearest_chunks(self, query_embedding, top_k: int = 5):
         embedding_str = ",".join(map(str, query_embedding))
 
         # KNN SQL sorgusu
@@ -112,7 +112,8 @@ class POST_ORM:
             POSTGRES_USER = "postgres_user"
             POSTGRES_PASSWORD = "password123"
             POSTGRES_DB = "mydatabase"
-            DATABASE_URL = f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@localhost:5432/{POSTGRES_DB}"
+            DATABASE_URL = f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@postgres:5432/{POSTGRES_DB}"
+            # DATABASE_URL = f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@localhost:5432/{POSTGRES_DB}"
             return DATABASE_URL
 
         if not hasattr(self, "_connection_url"):

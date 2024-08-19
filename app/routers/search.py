@@ -7,8 +7,13 @@ router = APIRouter(prefix="/search")
 orm = POST_ORM()
 
 
+@router.get("/")
+def home():
+    return {"welcome": "homeee"}
+
+
 @router.get("/query")
-async def search(url: str, query: str, top_k: Optional[int] = 5):
+async def search(url: str, query: str, top_k: int = 5):
     try:
         # get pdf, seperate to chunks and index to postgresql
         embedding_service(url)
@@ -16,7 +21,7 @@ async def search(url: str, query: str, top_k: Optional[int] = 5):
         # embed the question
         embedded_query = _embed_text(query)[0]
 
-        results = orm.search_nearest_chunks(embedded_query, top_k=5)
+        results = orm.search_nearest_chunks(embedded_query, top_k=top_k)
 
         orm.close()
 
