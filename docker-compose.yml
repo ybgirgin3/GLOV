@@ -13,6 +13,8 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./postgres_db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - app-network
 
   fastapi:
     build:
@@ -24,6 +26,12 @@ services:
       DATABASE_URL: postgres://postgres_user:password123@postgres:5432/mydatabase
     ports:
       - "8080:8080"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
 
 volumes:
   pgdata:
